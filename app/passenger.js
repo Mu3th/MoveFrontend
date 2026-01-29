@@ -1,15 +1,13 @@
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, Linking, StatusBar } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, Linking, StatusBar, Alert } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SelectList } from 'react-native-dropdown-select-list';
-// import { useRouter, useLocalSearchParams } from 'expo-router';
-
-// import domain from '../constants/domain';
+import DOMAIN from '../constants/domain';
 import colors from '../constants/Colors';
 
 function carsCards(car) {
-  call_onPress = () => {
+  const call_onPress = () => {
     Linking.openURL(`tel:${car.phone}`);
     let date = new Date();
     let current_date = date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
@@ -20,7 +18,7 @@ function carsCards(car) {
       "driverPhone": car.phone,
       "time": `${current_date} ${current_time}`
     }
-    fetch(`${domain.domain}/user-action`, {
+    fetch(`${DOMAIN}/user-action`, {
       method: "POST",
       headers: {
         Accept: "application/json",
@@ -65,7 +63,7 @@ function carsCards(car) {
           }
         </View>
       </View>
-      <TouchableOpacity onPress={this.call_onPress} style={{
+      <TouchableOpacity onPress={call_onPress} style={{
         width: "15%",
         alignItems: "center",
         justifyContent: "center"
@@ -76,11 +74,40 @@ function carsCards(car) {
   );
 }
 export default function App(props) {
-  search_onPress = async () => {
-    // console.log(regions);
+
+
+  useEffect(() => {
+    getRegions();
+  }, []);
+
+  const getRegions = async () => {
+    //Get regions from database
+    try {
+      const response = await fetch(`${DOMAIN}/complexes`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      setComplexes(data);
+      const seen = new Set();
+      let regionsNames = [];
+      for (const item of data) {
+        // Get name before the dash or full name if no dash
+        const baseName = item.name.split(' - ')[0].trim();
+        if (!seen.has(baseName)) {
+          seen.add(baseName);
+          regionsNames.push({ id: item.id, name: baseName });
+        }
+      }
+      setRegions(regionsNames);
+    } catch (error) {
+      console.log('There was a problem with the fetch operation: ', error);
+    }
+  };
+  const search_onPress = async () => {
     if (from_text && to_text) {
       try {
-        const response = await fetch(`${domain.domain}/cars/?from=${from_text}&to=${to_text}`);
+        const response = await fetch(`${DOMAIN}/cars/?from=${from_text}&to=${to_text}`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -89,15 +116,10 @@ export default function App(props) {
       } catch (error) {
         console.log('There was a problem with the fetch operation: ', error);
       }
+    } else {
+      Alert.alert("", "الرجاء ادخال منطقة الانطلاق ومنطقة الوصول", [{ text: "تم", }]);
     }
   };
-  // deleteData = async () => {
-  //   try {
-  //     await AsyncStorage.removeItem('@MyApp_key')
-  //   } catch(e) {
-  //     // remove error
-  //   }
-  // }
 
   const [from_text, setFromText] = useState('');
   const [to_text, setToText] = useState('');
@@ -105,9 +127,8 @@ export default function App(props) {
   const [toRegions, setToRegions] = useState([]);
   // const [cars, setCars] = useState(require('./carsList.json').cars);
   const [cars, setCars] = useState([]);
-  const [regions, setRegions] = useState(props.regions);
-  // const router = useRouter();
-  // const param = useLocalSearchParams();
+  const [regions, setRegions] = useState([]);
+  const [complexes, setComplexes] = useState([]);
 
   return (
     <View style={styles.container}>
@@ -120,31 +141,30 @@ export default function App(props) {
         data={regions}
         save="name"
       /> */}
-      
+
       <StatusBar backgroundColor="#000" barStyle="light-content" />
       <View style={styles.containerA}>
         <View style={{ width: "80%", height: "100%", backgroundColor: "#fff", flex: 4 }}>
           <TextInput
             placeholder='منطقة الانطلاق'
-            onPressIn = {()=>{setFromText("")}}
+            onPressIn={() => { setFromText("") }}
             style={styles.textInput}
             onChangeText={text => {
               setFromText(text);
-              // console.log(text ? regions.filter(item => item.includes(text)) : []);
-              setFromRegions(text ? regions.filter(item => item.includes(text)) : []);
+              setFromRegions(text ? regions.filter(item => item.name.includes(text)) : []);
             }}
             value={from_text}
           />
         </View>
       </View>
-      <View style={[{ width: "90%", position: 'absolute', top: 65, left: 20, zIndex: 1, borderColor: 'gray', borderRadius: 5}, fromRegions.length == 0 ?  {borderWidth: 0} : {borderWidth: 2, borderBottomWidth: 0}]}>
+      <View style={[{ width: "90%", position: 'absolute', top: 65, left: 20, zIndex: 1, borderColor: 'gray', borderRadius: 5 }, fromRegions.length == 0 ? { borderWidth: 0 } : { borderWidth: 2, borderBottomWidth: 0 }]}>
         <FlatList
           data={fromRegions}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => {
             return (
-              <TouchableOpacity style={{ height: 40 }} onPress={() => { setFromText(item); setFromRegions([]);}}>
-                <Text style={styles.cardText}>{item}</Text>
+              <TouchableOpacity style={{ height: 40 }} onPress={() => { setFromText(item.name); setFromRegions([]); }}>
+                <Text style={styles.cardText}>{item.name}</Text>
               </TouchableOpacity>
             )
           }}
@@ -155,35 +175,34 @@ export default function App(props) {
         <View style={{ width: "80%", height: "100%", backgroundColor: "#fff", flex: 4 }}>
           <TextInput
             placeholder='منطقة الوصول'
-            onPressIn = {()=>{setToText("")}}
+            onPressIn={() => { setToText("") }}
             style={styles.textInput}
             onChangeText={text => {
               setToText(text);
-              // console.log(regions.filter(item => item.includes(text))); 
-              setToRegions(text ? regions.filter(item => item.includes(text)) : []);
+              setToRegions(text ? regions.filter(item => item.name.includes(text)) : []);
             }}
             value={to_text}
           />
         </View>
       </View>
-      <View style={[{ width: "90%", position: 'absolute', top: 135, left: 20, zIndex: 1, borderColor: 'gray', borderRadius: 5}, toRegions.length == 0 ?  {borderWidth: 0} : {borderWidth: 2, borderBottomWidth: 0}]}>
+      <View style={[{ width: "90%", position: 'absolute', top: 135, left: 20, zIndex: 1, borderColor: 'gray', borderRadius: 5 }, toRegions.length == 0 ? { borderWidth: 0 } : { borderWidth: 2, borderBottomWidth: 0 }]}>
         <FlatList
           data={toRegions}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => {
             return (
-              <TouchableOpacity style={{ height: 40 }} onPress={() => { setToText(item); setToRegions([]) }}>
-                <Text style={styles.cardText}>{item}</Text>
+              <TouchableOpacity style={{ height: 40 }} onPress={() => { setToText(item.name); setToRegions([]) }}>
+                <Text style={styles.cardText}>{item.name}</Text>
               </TouchableOpacity>
             )
           }}
         />
       </View>
-      <View style={{ width: 350, height: 40, backgroundColor: colors.primary, borderRadius: 5, margin: 10, alignItems: 'center', }}>
-        <TouchableOpacity onPress={this.search_onPress}>
+      <TouchableOpacity onPress={search_onPress}>
+        <View style={{ width: 350, height: 40, backgroundColor: colors.primary, borderRadius: 5, margin: 10, alignItems: 'center', }}>
           <Text style={{ fontSize: 24, color: '#fff' }}>بحث</Text>
-        </TouchableOpacity>
-      </View>
+        </View>
+      </TouchableOpacity>
       <View style={{ width: 350, height: 40, backgroundColor: colors.primary, borderRadius: 5, margin: 10, alignItems: 'center', }}>
         <TouchableOpacity onPress={
           async () => {
@@ -225,9 +244,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     alignItems: 'center',
-    marginTop: 30
-    // paddingHorizontal: 20,
-    // paddingVertical: 50,
+    marginTop: 30,
   },
   textInput: {
     width: "100%",

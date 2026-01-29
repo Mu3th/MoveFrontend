@@ -6,7 +6,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 export function OTP_Screen() {
 
     const router = useRouter();
-    const {phone} = useLocalSearchParams();
+    const { phone } = useLocalSearchParams();
     const inputs = [];
     const [otp, setOtp] = useState(['', '', '', '']);
 
@@ -35,9 +35,15 @@ export function OTP_Screen() {
             //     "complexB": complexB.id,
             //   };
             //   let jsonDriverData = JSON.stringify(DriverData);
-            //   setDriverData(jsonDriverData);
+            // //   setDriverData(jsonDriverData);
+            // console.log("Error: " + jsonDriverData);
             await storeUserType("Driver");
-            
+            // try {
+            //     await AsyncStorage.setItem('DriverData', jsonDriverData);
+            // } catch (e) {
+            //     console.log("Error: " + e);
+            // }
+
             router.setParams({ userType: 'Driver' });
             router.dismissAll()
             router.replace('/driverTabs');

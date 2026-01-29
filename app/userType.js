@@ -7,18 +7,19 @@ export function UserType() {
 
     const router = useRouter();
 
-    passenger = async () => {
-        // console.log(`Passenger`);
+    const passenger = async () => {
         await storeUserType("Passenger");
-        router.replace('/passenger');
-        router.setParams({ userType: 'Passenger' });
+        router.replace({
+            pathname: '/passenger',
+            params: { userType: 'Passenger' }
+        });
     };
-    driver = async () => {
-        // console.log(`Driver`);
-        // await storeUserType("Driver");
+
+    const driver = async () => {
         router.navigate('/DriverData');
         router.setParams({ userType: 'Driver' });
     };
+
     const storeUserType = async (value) => {
         try {
             await AsyncStorage.setItem('userType', value);
@@ -26,16 +27,17 @@ export function UserType() {
             console.log("Error: " + e);
         }
     };
+    
     return (
         <View style={styles.container}>
             <StatusBar backgroundColor="#000" barStyle="light-content" />
-            <TouchableOpacity onPress={this.passenger}>
+            <TouchableOpacity onPress={passenger}>
                 <View style={styles.contentContainer}>
                     <Ionicons name={'man'} size={60} color={'red'} />
                     <Text style={styles.title}>راكب</Text>
                 </View>
             </TouchableOpacity>
-            <TouchableOpacity onPress={this.driver}>
+            <TouchableOpacity onPress={driver}>
                 <View style={styles.contentContainer}>
                     <Ionicons name={'car'} size={60} color={'red'} />
                     <Text style={styles.title}>سائق</Text>

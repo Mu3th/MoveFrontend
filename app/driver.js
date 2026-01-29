@@ -1,21 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, Alert, TouchableOpacity, StatusBar } from 'react-native';
 import * as Location from 'expo-location';
-import { getDistance, getPreciseDistance } from 'geolib';
-
-// import domain from '../constants/domain';
+import { getPreciseDistance } from 'geolib';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import DOMAIN from '../constants/domain';
 
 const Driver = (props) => {
   const [locationServiceEnabled, setLocationServiceEnabled] = useState(false);
-  const [displayCurrentAddress, setDisplayCurrentAddress] = useState(
-    'Wait, we are fetching you location...'
-  );
   const [currentPosition, setCurrentPosition] = useState({});
+  const [driverData, setDriverData] = useState();
 
-  // useEffect(() => {
-  //   CheckIfLocationEnabled();
-  //   GetCurrentLocation();
-  // }, []);
+  useEffect(() => {
+    CheckIfLocationEnabled();
+    GetCurrentLocation();
+    getDriverDataFromAsyncStorage();
+  }, []);
 
   const GetCurrentLocation = async () => {
     let { status } = await Location.requestForegroundPermissionsAsync();
@@ -33,8 +32,6 @@ const Driver = (props) => {
 
     if (coords) {
       const { latitude, longitude } = coords;
-      // console.log(latitude)
-      // console.log(longitude)
       setCurrentPosition({ latitude: latitude, longitude: longitude });
     }
   };
@@ -53,27 +50,36 @@ const Driver = (props) => {
       setLocationServiceEnabled(enabled);
     }
   };
-
+  const getDriverDataFromAsyncStorage = async () => {
+    //Get driver data from local storage
+    try {
+      const jsonValue = await AsyncStorage.getItem('DriverData')
+      if (jsonValue !== null) {
+        setDriverData(JSON.parse(jsonValue));
+      }
+    } catch (error) {
+      console.log("Error: " + error)
+    }
+  };
   const calculatePreciseDistance = (Position) => {
     return getPreciseDistance(Position, currentPosition);
   };
-  setOrder_onPress = async () => {
-    // console.log("Set Order");
+  const setOrder_onPress = async () => {
+    let permit = driverData.permit;
     let driverComplexes;
-    const response = await fetch(`${domain.domain}/driver-complexes/${props.driverData.permit_number}`);
-    const json = await response.json();
-    driverComplexes = json.complexes;
-    let permit = props.driverData.permit_number;
+    const response = await fetch(`${DOMAIN}/driver-complexes/${permit}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    driverComplexes = await response.json();
     let fromComplex, toComplex;
     await CheckIfLocationEnabled();
     if (locationServiceEnabled) {
-      await GetCurrentLocation();
-      // console.log("current location ", currentPosition);
       for (let i = 0; i < driverComplexes.length; i++) {
-        let distance = calculatePreciseDistance({ latitude: parseFloat(driverComplexes[i].lat), longitude: parseFloat(driverComplexes[i].log) });
+        let distance = calculatePreciseDistance({ latitude: parseFloat(driverComplexes[i].lat), longitude: parseFloat(driverComplexes[i].long) });
         if (distance < 50) {
           fromComplex = driverComplexes[i].name;
-          toComplex = driverComplexes[(i+1)%2].name;
+          toComplex = driverComplexes[(i + 1) % 2].name;
           let body = {
             "permit": permit,
             "status": "inQueue",
@@ -81,7 +87,7 @@ const Driver = (props) => {
             "toComplex": toComplex,
             "timestamp": Date.now()
           }
-          await fetch(`${domain.domain}/driver-status`, {
+          await fetch(`${DOMAIN}/driver-status`, {
             method: "PUT",
             headers: {
               Accept: "application/json",
@@ -95,18 +101,18 @@ const Driver = (props) => {
           return;
         }
       }
-      Alert.alert("بعيد", `انت تبعد حوالي  متر عن المجمع`,
+      Alert.alert("بعيد", `انت تبعد أكثر من 50 متر عن مركز المجمع`,
         [{ text: 'تم' }],
         { cancelable: false })
     };
   };
-  go_onPress = () => {
+  const go_onPress = () => {
     let body = {
-      "permit": props.driverData.permit_number,
+      "permit": driverData.permit,
       "status": "onRoad",
       "timestamp": Date.now()
     }
-    fetch(`${domain.domain}/driver-status`, {
+    fetch(`${DOMAIN}/driver-status`, {
       method: "PUT",
       headers: {
         Accept: "application/json",
@@ -118,13 +124,13 @@ const Driver = (props) => {
       [{ text: 'تم' }],
       { cancelable: false });
   };
-  OOS_onPress = () => {
+  const OOS_onPress = () => {
     let body = {
-      "permit": props.driverData.permit_number,
+      "permit": driverData.permit,
       "status": "OOS",
       "timestamp": Date.now()
     }
-    fetch(`${domain.domain}/driver-status`, {
+    fetch(`${DOMAIN}/driver-status`, {
       method: "PUT",
       headers: {
         Accept: "application/json",
@@ -139,13 +145,13 @@ const Driver = (props) => {
   return (
     <View style={styles.container}>
       <StatusBar backgroundColor="#000" barStyle="light-content" />
-      <TouchableOpacity style={styles.contentContainer} onPress={this.setOrder_onPress}>
+      <TouchableOpacity style={styles.contentContainer} onPress={setOrder_onPress}>
         <Text style={styles.title}>احجز دورك</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.contentContainer} onPress={this.go_onPress}>
+      <TouchableOpacity style={styles.contentContainer} onPress={go_onPress}>
         <Text style={styles.title}>انطلاق</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.contentContainer} onPress={this.OOS_onPress}>
+      <TouchableOpacity style={styles.contentContainer} onPress={OOS_onPress}>
         <Text style={styles.title}>خارج الخدمة</Text>
       </TouchableOpacity>
     </View>
@@ -174,7 +180,6 @@ const styles = StyleSheet.create({
     fontSize: 30,
     fontWeight: 'bold',
     color: '#DA2C38',
-    // paddingTop: 10,
   },
 });
 
