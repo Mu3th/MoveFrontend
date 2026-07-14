@@ -37,12 +37,12 @@ export function UserType() {
                     <Text style={styles.title}>راكب</Text>
                 </View>
             </TouchableOpacity>
-            {/* <TouchableOpacity onPress={driver}>
+            <TouchableOpacity onPress={driver}>
                 <View style={styles.contentContainer}>
                     <Ionicons name={'car'} size={60} color={'red'} />
                     <Text style={styles.title}>سائق</Text>
                 </View>
-            </TouchableOpacity> */}
+            </TouchableOpacity>
         </View>
     );
 };
