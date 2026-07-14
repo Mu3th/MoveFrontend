@@ -12,6 +12,7 @@ export default function Index() {
   useEffect(() => {
     checkData();
   }, []);
+  
 
   const checkData = async () => {
     //Get user type from local storage
