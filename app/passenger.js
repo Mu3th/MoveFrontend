@@ -117,7 +117,15 @@ export default function App(props) {
         console.log('There was a problem with the fetch operation: ', error);
       }
     } else {
-      Alert.alert("", "الرجاء ادخال منطقة الانطلاق ومنطقة الوصول", [{ text: "تم", }]);
+      alert("الرجاء ادخال منطقة الانطلاق ومنطقة الوصول", [{ text: "تم", }]);
+    }
+  };
+  const delete_user_data = async () => {
+    try {
+      await AsyncStorage.removeItem('userType')
+      await AsyncStorage.removeItem('DriverData')
+    } catch (e) {
+      // remove error
     }
   };
 
@@ -125,24 +133,24 @@ export default function App(props) {
   const [to_text, setToText] = useState('');
   const [fromRegions, setFromRegions] = useState([]);
   const [toRegions, setToRegions] = useState([]);
-  // const [cars, setCars] = useState(require('./carsList.json').cars);
   const [cars, setCars] = useState([]);
   const [regions, setRegions] = useState([]);
   const [complexes, setComplexes] = useState([]);
-
   return (
     <View style={styles.container}>
+
+      <StatusBar backgroundColor="#000" barStyle="light-content" />
       {/* <SelectList
-        // boxStyles={{width: "60%"}}
-        // inputStyles={{width: "60%"}}
+        boxStyles={{width: "100%"}}
+        inputStyles={{width: "60%"}}
+        placeholder="اختر نوع السيارة"
+        searchPlaceholder="ابحث عن نوع السيارة"
         // dropdownStyles={{width: "60%"}}
 
         // setSelected={(val) => setSelected(val)} 
-        data={regions}
-        save="name"
+        data={data}
+        save="value"
       /> */}
-
-      <StatusBar backgroundColor="#000" barStyle="light-content" />
       <View style={styles.containerA}>
         <View style={{ width: "80%", height: "100%", backgroundColor: "#fff", flex: 4 }}>
           <TextInput
@@ -157,7 +165,7 @@ export default function App(props) {
           />
         </View>
       </View>
-      <View style={[{ width: "90%", position: 'absolute', top: 65, left: 20, zIndex: 1, borderColor: 'gray', borderRadius: 5 }, fromRegions.length == 0 ? { borderWidth: 0 } : { borderWidth: 2, borderBottomWidth: 0 }]}>
+      <View style={[{ width: "90%", maxWidth: 450, position: 'absolute', top: 65, zIndex: 1, borderColor: 'gray', borderRadius: 5 }, fromRegions.length == 0 ? { borderWidth: 0 } : { borderWidth: 2, borderBottomWidth: 0 }]}>
         <FlatList
           data={fromRegions}
           keyExtractor={(item) => item.id}
@@ -185,7 +193,7 @@ export default function App(props) {
           />
         </View>
       </View>
-      <View style={[{ width: "90%", position: 'absolute', top: 135, left: 20, zIndex: 1, borderColor: 'gray', borderRadius: 5 }, toRegions.length == 0 ? { borderWidth: 0 } : { borderWidth: 2, borderBottomWidth: 0 }]}>
+      <View style={[{ width: "90%", maxWidth: 450, position: 'absolute', top: 135, zIndex: 1, borderColor: 'gray', borderRadius: 5 }, toRegions.length == 0 ? { borderWidth: 0 } : { borderWidth: 2, borderBottomWidth: 0 }]}>
         <FlatList
           data={toRegions}
           keyExtractor={(item) => item.id}
@@ -198,25 +206,11 @@ export default function App(props) {
           }}
         />
       </View>
-      <TouchableOpacity onPress={search_onPress}>
-        <View style={{ width: 350, height: 40, backgroundColor: colors.primary, borderRadius: 5, margin: 10, alignItems: 'center', }}>
+      <TouchableOpacity onPress={search_onPress} onLongPress={delete_user_data}>
+        <View style={{ width: 324, height: 40, backgroundColor: colors.primary, borderRadius: 5, margin: 10, alignItems: 'center', }}>
           <Text style={{ fontSize: 24, color: '#fff' }}>بحث</Text>
         </View>
       </TouchableOpacity>
-      <View style={{ width: 350, height: 40, backgroundColor: colors.primary, borderRadius: 5, margin: 10, alignItems: 'center', }}>
-        <TouchableOpacity onPress={
-          async () => {
-            try {
-              await AsyncStorage.removeItem('userType')
-              await AsyncStorage.removeItem('DriverData')
-            } catch (e) {
-              // remove error
-            }
-          }
-        }>
-          <Text style={{ fontSize: 24, color: '#fff' }}>احذف</Text>
-        </TouchableOpacity>
-      </View>
       {cars.length == 0 && <Text style={{
         height: "50%",
         width: 200,
@@ -227,7 +221,7 @@ export default function App(props) {
       }}>لا توجد سيارات في الخدمة حاليا</Text>}
       {cars.length > 0 &&
         <FlatList
-          style={{ width: "90%", borderTopColor: 'gray', borderTopWidth: 2 }}
+          style={{ width: "90%", maxWidth: 450, borderTopColor: 'gray', borderTopWidth: 2 }}
           data={cars}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => {
@@ -244,7 +238,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     alignItems: 'center',
-    marginTop: 30,
   },
   textInput: {
     width: "100%",
@@ -257,6 +250,7 @@ const styles = StyleSheet.create({
   },
   containerA: {
     width: "90%",
+    maxWidth: 450,
     height: 40,
     backgroundColor: "#fff",
     margin: 10,

@@ -40,8 +40,7 @@ const Driver = (props) => {
     let enabled = await Location.hasServicesEnabledAsync();
 
     if (!enabled) {
-      Alert.alert(
-        'خدمة الموقع غير ممكّنة',
+      alert(
         'يرجى تمكين خدمات الموقع الخاصة بك للمتابعة',
         [{ text: 'تم' }],
         { cancelable: false }
@@ -95,13 +94,13 @@ const Driver = (props) => {
             },
             body: JSON.stringify(body),
           })
-          Alert.alert("قريب", `تم حجز الدور بنجاح في ${fromComplex}`,
+          alert(`تم حجز الدور بنجاح في ${fromComplex}`,
             [{ text: 'تم' }],
             { cancelable: false });
           return;
         }
       }
-      Alert.alert("بعيد", `انت تبعد أكثر من 50 متر عن مركز المجمع`,
+      alert(`انت تبعد أكثر من 50 متر عن مركز المجمع`,
         [{ text: 'تم' }],
         { cancelable: false })
     };
@@ -120,7 +119,7 @@ const Driver = (props) => {
       },
       body: JSON.stringify(body),
     })
-    Alert.alert("انطلاق", "نتمنى لك رحلة آمنة",
+    alert("نتمنى لك رحلة آمنة",
       [{ text: 'تم' }],
       { cancelable: false });
   };
@@ -138,7 +137,7 @@ const Driver = (props) => {
       },
       body: JSON.stringify(body),
     })
-    Alert.alert("خارج الخدمة", "نتمنى لك يوم سعيد",
+    alert("نتمنى لك يوم سعيد",
       [{ text: 'تم' }],
       { cancelable: false });
   };

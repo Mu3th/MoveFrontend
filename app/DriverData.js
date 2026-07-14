@@ -38,24 +38,29 @@ export function DriverData() {
   const handleSubmit = async () => {
     // Validate the inputs
     if (driverName.split(" ").length < 3 || driverName.split(" ").some((word) => word.length < 3 && word.length > 0)) {
-      Alert.alert("", "الاسم الثلاثي غير صحيح", [{ text: "تم", }]);
+      // if (Platform.OS === 'web') {
+      //   alert('This is a web alert!'); // Falls back to browser alert
+      // } else {
+      //   Alert.alert('Title', 'This is a mobile alert!');
+      // }
+      alert("الاسم الثلاثي غير صحيح", [{ text: "تم", }]);
       return;
     }
     if (driverPhone.length !== 10) {
-      Alert.alert("", "رقم الجوال غير صحيح", [{ text: "تم", }]);
+      alert("رقم الجوال غير صحيح", [{ text: "تم", }]);
       return;
     }
     if (passengersCount < 4 || passengersCount > 60
     ) {
-      Alert.alert("", "عدد الركاب غير صحيح", [{ text: "تم", }]);
+      alert("عدد الركاب غير صحيح", [{ text: "تم", }]);
       return;
     }
     if (permitNumber.split("-")[0].length != 1 || permitNumber.split("-")[1].length != 4) {
-      Alert.alert("", "الرجاء ادخال رقم خط صحيح (x-xxxx)", [{ text: "تم", }]);
+      alert("الرجاء ادخال رقم خط صحيح (x-xxxx)", [{ text: "تم", }]);
       return;
     }
     if (complexA == "" || complexB == "") {
-      Alert.alert("", "الرجاء ادخال مجرى الخط"), [{ text: "تم", }];
+      alert("الرجاء ادخال مجرى الخط"), [{ text: "تم", }];
       return;
     }
     // Save the data
@@ -97,10 +102,10 @@ export function DriverData() {
         await storeDriverData(data);
         router.replace('/driverTabs');
         router.setParams({ userType: 'Driver' });
-      } 
+      }
       //If permit already exists
       else if (response.status === 200) {
-        Alert.alert("", result.message, [{ text: "تم", }]);
+        alert(result.message, [{ text: "تم", }]);
       }
     } catch (error) {
       console.log('There was a problem with the fetch operation: ', error);
